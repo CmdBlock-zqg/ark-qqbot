@@ -1,7 +1,8 @@
-const arkData = require('./arkData')
-const sender = require('./sender')
+const arkData = require('../arkData')
+const sender = require('../sender')
+const conf = require('../conf')
 
-module.exports = {
+const handlers = {
     '##帮助': (msg, user) => {
         return `使用帮助
 查询今日过生日的干员 ##生日
@@ -125,7 +126,7 @@ ${arr.join(' ')}`
         return `材料${arr[1]}合成配方\n${res}`
     },
     '##十连': (msg, user) => {
-        let res = `抽卡算法完全由命令方块YY 结果无任何参考价值 仅供娱乐`
+        let res = ''
         let star = [
             '★☆☆☆☆☆',
             '★★☆☆☆☆',
@@ -150,8 +151,23 @@ ${arr.join(' ')}`
         else if (max === 4) word = '紫气东来 下次一定'
         else if (max === 5) word = '拉包金光 言出法随'
         else if (max === 6) word = '火光彩虹 欧皇附体'
-        sender.sendPrivateMessage(user, res + '\n' + word)
-        return null
+        return [
+            {
+                uin: String(conf.id),
+                name: '十连',
+                content: '抽卡算法完全由命令方块YY 结果无任何参考价值 仅供娱乐'
+            },
+            {
+                uin: String(conf.id),
+                name: '十连',
+                content: res
+            },
+            {
+                uin: String(conf.id),
+                name: '十连',
+                content: word
+            }
+        ]
     },
     '##选择': (msg, user) => {
         let arr = msg.split(' ')
@@ -162,5 +178,22 @@ ${arr.join(' ')}`
 `
         }
         return arr[Math.floor(Math.random() * (arr.length - 1)) + 1]
+    }
+}
+
+module.exports = (msg, user, group, type) => {
+    if (msg.indexOf('##') !== 0) return
+    let res
+    for (let i of Object.keys(handlers)) {
+        if (msg.indexOf(i) === 0) {
+            res = handlers[i](msg, user)
+            break
+        }
+    }
+    if (!res) return
+    if (typeof(res) === 'string') {
+        sender.sendGroupMessage(group, res)
+    } else {
+        sender.sendGroupForwardMessage(group, res)
     }
 }

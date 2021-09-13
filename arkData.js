@@ -19,6 +19,7 @@ function update() {
     // 干员生日
     const handbook_info_table = fs.readFileSync('../ArknightsGameData/zh_CN/gamedata/excel/handbook_info_table.json', 'utf-8')
     let i = -1
+    let res = {}
     while (true) {
         i = handbook_info_table.indexOf('【生日】', i + 1)
         if (i === -1) break
@@ -27,9 +28,10 @@ function update() {
         let value = handbook_info_table.slice(j + 4, handbook_info_table.indexOf(String.raw`\n`, j + 1))
         key = trimStr(key)
         value = trimStr(value)
-        if (birthdayOp[key]) birthdayOp[key].push(value)
-        else birthdayOp[key] = [value]
+        if (res[key]) res[key].push(value)
+        else res[key] = [value]
     }
+    birthdayOp = res
 
     // 物品列表
     const item_table = JSON.parse(fs.readFileSync('../ArknightsGameData/zh_CN/gamedata/excel/item_table.json', 'utf-8')).items

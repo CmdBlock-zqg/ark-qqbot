@@ -38,9 +38,9 @@ const formatText = (raw, urls) => {
 }
 
 const formatPics = (pics) => {
-    let res = ''
+    let res = []
     for (let i of Object.keys(pics)) {
-        res += `[CQ:image,file=${pics[i].original.url}]`
+        res.push(`[CQ:image,file=${pics[i].original.url}]`)
     }
     return res
 }
@@ -58,8 +58,10 @@ const blogToMsg = async (blog) => {
         res = ret.text
         Object.assign(pics, ret.pics)
     }
-    res += formatPics(pics)
-    return res
+    return {
+        text: res,
+        pics: formatPics(pics)
+    }
 }
 
 const formatVideo = (blog) => {
@@ -89,13 +91,38 @@ const main = async () => {
             if (blog.id <= lastId || blog.retweeted_status) continue
             if (blog.id > maxId) maxId = blog.id
             let resText = await blogToMsg(blog)
+            let resPics = resText.pics
+            resText = resText.text
             let resVideo = formatVideo(blog)
-            for (let group of conf.groups) {
-                sender.sendGroupMessage(group, resText)
-                if (resVideo) sender.sendGroupMessage(group, resVideo)
+            let msgs = [resText]
+            let forward = [{
+                uin: conf.id,
+                name: '发饼',
+                content: resText
+            }]
+            for (let pic of resPics) {
+                forward.push({
+                    uin: conf.id,
+                    name: '发饼',
+                    content: pic
+                })
+                msgs.push(pic)
             }
-            sender.sendPrivateMessage(conf.admin, resText)
-            if (resVideo) sender.sendPrivateMessage(conf.admin, resVideo)
+            if (resVideo) {
+                forward.push({
+                    uin: conf.id,
+                    name: '发饼',
+                    content: resVideo
+                })
+                msgs.push(resVideo)
+            }
+            for (let user of conf.weibo.broadcast.users) {
+                sender.sendPrivateMessage(user, msgs)
+            }
+            for (let group of conf.weibo.broadcast.groups) {
+                sender.sendGroupMessage(group, msgs)
+                sender.sendGroupForwardMessage(group, forward)
+            }
         }
     }
     if (maxId > lastId) {
