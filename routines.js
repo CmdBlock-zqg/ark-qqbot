@@ -1,6 +1,5 @@
 const promisify = require('util').promisify
 const exec = promisify(require('child_process').exec)
-const fs = require('fs')
 
 const conf = require('./conf')
 const updateWeibo = require('./weibo')

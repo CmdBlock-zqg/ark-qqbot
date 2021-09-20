@@ -22,6 +22,11 @@ const httpGet = async (url, params) => {
 
 const formatText = (raw, urls) => {
     let text = raw
+    text = text.replace('&quot;', '"')
+    text = text.replace('&amp;', '&')
+    text = text.replace('&lt;', '<')
+    text = text.replace('&gt;', '>')
+    text = text.replace('&nbsp;', ' ')
     let pics = {}
     for (let url of urls) {
         if (url.pic_infos) {
@@ -120,13 +125,13 @@ const main = async () => {
                 sender.sendPrivateMessage(user, msgs)
             }
             for (let group of conf.weibo.broadcast.groups) {
-                sender.sendGroupMessage(group, msgs)
-                sender.sendGroupForwardMessage(group, forward)
+                await sender.sendGroupMessage(group, msgs)
+                await sender.sendGroupForwardMessage(group, forward)
             }
         }
     }
     if (maxId > lastId) {
-        fs.writeFileSync('./lastWeiboId.txt', maxId)
+        fs.writeFileSync('./lastWeiboId.txt', String(maxId))
     }
 }
 

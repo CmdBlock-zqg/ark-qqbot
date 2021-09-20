@@ -126,48 +126,7 @@ ${arr.join(' ')}`
         return `材料${arr[1]}合成配方\n${res}`
     },
     '##十连': (msg, user) => {
-        let res = ''
-        let star = [
-            '★☆☆☆☆☆',
-            '★★☆☆☆☆',
-            '★★★☆☆☆',
-            '★★★★☆☆',
-            '★★★★★☆',
-            '★★★★★★',
-        ]
-        let max = 3
-        for (let i = 0; i < 10; i++) {
-            let s = Math.floor(Math.random() * 100)
-            let rarity = 6
-            if (s >= 0 && s < 2) rarity = 6
-            else if (s >= 2 && s <= 10) rarity = 5
-            else if (s >= 10 && s < 60) rarity = 4
-            else if (s >= 60 && s < 100) rarity = 3
-            if (rarity > max) max = rarity  
-            res += `\n${star[rarity - 1]} ${arkData.getRandomOp(rarity)}`
-        }
-        let word = ''
-        if (max === 3) word = '十连白光 反向欧皇'
-        else if (max === 4) word = '紫气东来 下次一定'
-        else if (max === 5) word = '拉包金光 言出法随'
-        else if (max === 6) word = '火光彩虹 欧皇附体'
-        return [
-            {
-                uin: String(conf.id),
-                name: '十连',
-                content: '抽卡算法完全由命令方块YY 结果无任何参考价值 仅供娱乐'
-            },
-            {
-                uin: String(conf.id),
-                name: '十连',
-                content: res
-            },
-            {
-                uin: String(conf.id),
-                name: '十连',
-                content: word
-            }
-        ]
+        return `该功能由于群友滥用 正在整改`
     },
     '##选择': (msg, user) => {
         let arr = msg.split(' ')
