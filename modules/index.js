@@ -1,7 +1,8 @@
 const conf = require('../conf')
 
 const handlers = {
-    'common': require('./common')
+    'common': require('./common'),
+    'gacha': require('./gacha')
 }
 
 module.exports = (msg, user, group, type) => {

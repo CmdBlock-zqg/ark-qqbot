@@ -14,6 +14,10 @@ module.exports = () => {
 }
 
 const updateData = async () => {
-    await exec('git pull', { cwd: '../ArknightsGameData/' })
+    try {
+        await exec('git pull', { cwd: '../ArknightsGameData/' })
+    } catch(err) {
+
+    }
     updateArkData()
 }

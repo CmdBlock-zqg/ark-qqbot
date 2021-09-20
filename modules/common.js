@@ -125,9 +125,6 @@ ${arr.join(' ')}`
         }
         return `材料${arr[1]}合成配方\n${res}`
     },
-    '##十连': (msg, user) => {
-        return `该功能由于群友滥用 正在整改`
-    },
     '##选择': (msg, user) => {
         let arr = msg.split(' ')
         if (arr.length === 1) {
