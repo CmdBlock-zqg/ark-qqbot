@@ -225,7 +225,6 @@ module.exports = async (msg, user, group, type) => {
     if (msg.indexOf('##十连') !== 0) return
     let arr = msg.split(' ')
     if (msg.indexOf('##十连统计') === 0) arr = ['##十连', '统计']
-    if (msg.indexOf('##十连卡池') === 0) arr = ['##十连', '卡池']
     user = String(user)
     if (arr[1] === '统计') { // 输出统计
         await db.hSetNX('gacha_time_left', user, String(conf.gacha.maxTime))
@@ -239,15 +238,16 @@ module.exports = async (msg, user, group, type) => {
 连续未出六星次数（限定）：${await db.hGet('gacha_time_no_6_lim', user)}
 总十连次数：${stat.tot}
 总六星个数：${stat.nb}
-六星抽歪次数：${stat.noup}`)
-    } else if (arr[1] === '卡池') { // 卡池列表
-        let res = ''
-        for (let i = 0; i < gachas.length; i++) {
-            if (i) res += '\n'
-            res += `${i} ${gachas[i].name}`
-        }
-        sender.sendGroupMessage(group, res)
+六星抽歪次数：${stat.noup}`
+        )
     } else if (!isNaN(arr[1]) && gachas[Number(arr[1])]) { // 抽取
+        const starText = {
+            3: '★★★☆☆☆',
+            4: '★★★★☆☆',
+            5: '★★★★★☆',
+            6: '★★★★★★',
+        }
+
         await db.hSetNX('gacha_time_left', user, String(conf.gacha.maxTime))
         if (await db.hGet('gacha_time_left', user) === '0') {
             sender.sendGroupMessage(group, `[CQ:at,qq=${user}] 每日十连次数已用完`)
@@ -255,27 +255,14 @@ module.exports = async (msg, user, group, type) => {
         }
         
         const pool = gachas[Number(arr[1])] // 当前卡池
-        let time = 0 // 未抽到6星次数
         await db.hSetNX('gacha_stat', user, JSON.stringify({ tot: 0, nb: 0, noup: 0 }))
-        let stat = JSON.parse(await db.hGet('gacha_stat', user))
-        let resText = `[CQ:at,qq=${user}]`
-        const starText = [
-            '',
-            '',
-            '',
-            '★★★☆☆☆',
-            '★★★★☆☆',
-            '★★★★★☆',
-            '★★★★★★',
-        ]
-        if (pool.type === 'std') {
-            await db.hSetNX('gacha_time_no_6_std', user, '0')
-            time = Number(await db.hGet('gacha_time_no_6_std', user))
-        } else {
-            await db.hSetNX('gacha_time_no_6_lim', user, '0')
-            time = Number(await db.hGet('gacha_time_no_6_lim', user))
-        }
+        let stat = JSON.parse(await db.hGet('gacha_stat', user)) // 统计信息
+        let resText = `[CQ:at,qq=${user}]` // 结果消息
+        
+        await db.hsetNX('gacha_time_no_6_' + pool.type, user, '0')
+        let time = Number(await db.hGet('gacha_time_no_6_' + pool.type, user)) // 无六星次数
         stat.tot++
+
         for (let cnt = 0; cnt < 10; cnt++) {
             let chance = time <= 50 ? 2 : 2 + (time - 50) * 2
             if (getRand(0, 99) < chance) { // 抽到六星
@@ -307,28 +294,29 @@ module.exports = async (msg, user, group, type) => {
                 break
             }
         }
+
         await db.hIncrBy('gacha_time_left', user, -1)
         const t = {}
-        if (pool.type === 'std') {
-            t[user] = String(time)
-            await db.hSet('gacha_time_no_6_std', t)
-        } else {
-            t[user] = String(time)
-            await db.hSet('gacha_time_no_6_lim', t)
-        }
+        t[user] = String(time)
+        await db.hSet('gacha_time_no_6_' + pool.type, t)
         t[user] = JSON.stringify(stat)
         await db.hSet('gacha_stat', t)
         sender.sendGroupMessage(group, resText)
+
     } else { // 帮助
-        sender.sendGroupMessage(group, `##十连：查看帮助
-##十连 统计：查看统计信息
-##十连 卡池：查看卡池列表
-##十连 [卡池编号]：抽取相应卡池`)
+        let res = `##十连 统计：查看统计信息`
+        for (let i = 0; i < gachas.length; i++) {
+            res += `\n##十连 ${i}：抽取${gachas[i].name}`
+        }
+        sender.sendGroupMessage(group, res)
     }
 }
 
 /*
-{
+gacha_time_left
+gacha_time_no_6_std
+gacha_time_no_6_lim
+stat { 统计信息
     total, 总十连次数
     nb, 六星个数
     noup, 歪次数
