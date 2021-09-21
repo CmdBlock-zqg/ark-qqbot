@@ -20,6 +20,9 @@ module.exports = {
     gacha: {
         maxTime: 3
     },
+    msgStat: {
+        admin: [1111111111, 222222222222] // 可以调取发言统计的人
+    },
     handlers: {
         0: [], // 私聊
         1111111111: ['common', 'gacha'],
