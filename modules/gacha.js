@@ -258,8 +258,7 @@ module.exports = async (msg, user, group, type) => {
         await db.hSetNX('gacha_stat', user, JSON.stringify({ tot: 0, nb: 0, noup: 0 }))
         let stat = JSON.parse(await db.hGet('gacha_stat', user)) // 统计信息
         let resText = `[CQ:at,qq=${user}]` // 结果消息
-        
-        await db.hsetNX('gacha_time_no_6_' + pool.type, user, '0')
+        await db.hSetNX('gacha_time_no_6_' + pool.type, user, '0')
         let time = Number(await db.hGet('gacha_time_no_6_' + pool.type, user)) // 无六星次数
         stat.tot++
 

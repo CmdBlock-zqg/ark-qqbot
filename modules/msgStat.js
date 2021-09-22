@@ -1,4 +1,5 @@
 const schedule = require('node-schedule')
+const axios = require('axios')
 
 const conf = require('../conf')
 const db = require('../db')
@@ -50,7 +51,18 @@ module.exports = async (msg, user, group, type) => {
         
         for (let i = 0; i < 10; i++) {
             if (!arr[i]) break
-            res += `\n[CQ:at,qq=${arr[i][0]}] ${arr[i][1]}条`
+            const { data } = (await axios({
+                method: 'POST',
+                baseURL: conf.cqhttp.baseURL,
+                url: '/get_group_member_info',
+                data: {
+                    group_id: group,
+                    user_id: arr[i][0]
+                }
+            })).data
+            res += '\n'
+            if (data.title) res += `[${data.title}]`
+            res += `${data.card} ${arr[i][1]}条`
         }
         sender.sendGroupMessage(group, res)
     }
