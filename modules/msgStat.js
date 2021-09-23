@@ -62,7 +62,7 @@ module.exports = async (msg, user, group, type) => {
             })).data
             res += '\n'
             if (data.title) res += `[${data.title}]`
-            res += `${data.card} ${arr[i][1]}条`
+            res += `${data.card || data.nickname} ${arr[i][1]}条`
         }
         sender.sendGroupMessage(group, res)
     }
