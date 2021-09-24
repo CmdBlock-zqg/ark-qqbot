@@ -1,8 +1,8 @@
 const axios = require('axios')
 
-const db = require('./db')
-const conf = require('./conf')
-const sender = require('./sender')
+const db = require('../db')
+const conf = require('../conf')
+const sender = require('../sender')
 
 const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms) })
 
@@ -136,4 +136,7 @@ const main = async () => {
     }
 }
 
-module.exports = main
+module.exports = () => {
+    main()
+    setInterval(main, conf.weibo.updateInterval)
+}

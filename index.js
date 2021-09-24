@@ -1,8 +1,10 @@
 const http = require('http')
 
-require('./routines')()
 const conf = require('./conf')
 const route = require('./modules')
+
+require('./spiders')()
+require('./arkData').init()
 
 const server = http.createServer()
 server.on('request', (req, resp) => {
@@ -12,7 +14,7 @@ server.on('request', (req, resp) => {
         body = JSON.parse(body)
         if (body.post_type !== 'message') return
         if (conf.ban.indexOf(body.sender.user_id) !== -1) return
-        route(body.message, body.sender.user_id, body.temp_source | body.group_id | body.sender.group_id, body.message_type)
+        route(body.message, body.sender.user_id, body.temp_source || body.group_id || body.sender.group_id, body.message_type)
     })
     resp.end()
 })

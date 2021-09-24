@@ -1,3 +1,8 @@
+const promisify = require('util').promisify
+const exec = promisify(require('child_process').exec)
+
+const conf = require('./conf')
+
 var birthdayOp = {}
 var items = {}
 var characters = {}
@@ -88,7 +93,17 @@ function update() {
 }
 
 module.exports = {
-    update,
+    init: () => {
+        update()
+        setInterval(async () => {
+            try {
+                await exec('git pull', { cwd: '../ArknightsGameData/' })
+            } catch(err) {
+        
+            }
+            update()
+        }, conf.arkData.updateInterval)
+    },
     getBirthdayOps: (key) => {
         return birthdayOp[key] ? birthdayOp[key] : []
     },
