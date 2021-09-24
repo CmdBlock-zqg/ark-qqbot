@@ -1,6 +1,6 @@
-const fs = require('fs')
 const axios = require('axios')
 
+const db = require('./db')
 const conf = require('./conf')
 const sender = require('./sender')
 
@@ -84,7 +84,8 @@ const formatVideo = (blog) => {
 
 const main = async () => {
     let users = conf.weibo.userIdList
-    let lastId = Number(fs.readFileSync('./lastWeiboId.txt', 'utf-8'))
+    await db.setNX('last_weibo_id', '4684612855399759')
+    let lastId = Number(await db.get('last_weibo_id'))
     let maxId = 0
     for (let user of users) {
         let blogs = await httpGet('https://weibo.com/ajax/statuses/mymblog', {
@@ -131,7 +132,7 @@ const main = async () => {
         }
     }
     if (maxId > lastId) {
-        fs.writeFileSync('./lastWeiboId.txt', String(maxId))
+        await db.set('last_weibo_id', String(maxId))
     }
 }
 
