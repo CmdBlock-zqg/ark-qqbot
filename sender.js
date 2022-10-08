@@ -1,7 +1,23 @@
 const { default: axios } = require('axios')
-const http = require('http')
 
 const conf = require('./conf')
+
+let queue = []
+
+setInterval(() => {
+    const x = queue.shift()
+    if (!x) return
+    axios({
+        method: 'POST',
+        baseURL: conf.cqhttp.baseURL,
+        url: '/send_group_msg',
+        data: {
+            user_id: x.group,
+            message: x.msg,
+            group_id: x.group
+        }
+    })
+}, 800)
 
 module.exports = {
     sendPrivateMessage: async (user, msg, group) => {
@@ -33,27 +49,15 @@ module.exports = {
     },
     sendGroupMessage: async (group, msg) => {
         if (typeof(msg) === 'string') {
-            await axios({
-                method: 'POST',
-                baseURL: conf.cqhttp.baseURL,
-                url: '/send_group_msg',
-                data: {
-                    user_id: group,
-                    message: msg,
-                    group_id: group
-                }
+            queue.push({
+                group: group,
+                msg: msg
             })
         } else {
             for (let i of msg) {
-                await axios({
-                    method: 'POST',
-                    baseURL: conf.cqhttp.baseURL,
-                    url: '/send_group_msg',
-                    data: {
-                        user_id: group,
-                        message: i,
-                        group_id: group
-                    }
+                queue.push({
+                    group: group,
+                    msg: i
                 })
             }
         }
@@ -85,5 +89,24 @@ module.exports = {
            console.log(err)
        }
         
+    },
+    setGroupBan: async (group, enable) => {
+        await axios({
+            method: 'POST',
+            baseURL: conf.cqhttp.baseURL,
+            url: '/set_group_whole_ban',
+            data: {
+                group_id: group,
+                enable: enable//  ? 'true' : 'false'
+            }
+        })
+    },
+    canReach: async (url) => {
+        try {
+            await axios.get(url)
+        } catch {
+            return false
+        }
+        return true
     }
 }

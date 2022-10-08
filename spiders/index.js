@@ -1,6 +1,6 @@
 const spiders = {
     'weibo': require('./weibo'),
-    'sirenNews': require('./sirenNews')
+    'sirenNews': require('./sirenNews'),
 }
 
 module.exports = () => {

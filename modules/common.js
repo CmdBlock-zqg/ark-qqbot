@@ -1,9 +1,23 @@
+const schedule = require('node-schedule')
+
 const arkData = require('../arkData')
 const sender = require('../sender')
 const conf = require('../conf')
+const { canReach } = require('../sender')
+
+schedule.scheduleJob('0 30 0 * * *', async () => { // 每天0:30
+   // await sender.setGroupBan(conf.group, true)
+    await sender.sendGroupMessage(conf.group, handlers['##生日']())
+    await sender.sendGroupMessage(conf.group, '各位晚安')
+})
+
+schedule.scheduleJob('0 30 5 * * *', async () => { // 每天5:30
+    // await sender.setGroupBan(conf.group, false)
+    await sender.sendGroupMessage(conf.group, '芜湖！')
+})
 
 const handlers = {
-    '##帮助': (msg, user) => {
+    '##帮助': async (msg, user) => {
         return `使用帮助
 查询今日过生日的干员 ##生日
 查询升级花费 ##升级
@@ -14,9 +28,10 @@ const handlers = {
 查询材料合成 ##合成
 假装抽卡 ##十连
 随机选择 ##选择
-芜湖 ##芜湖`
+芜湖 ##芜湖
+合成表情 ##表情` 
     },
-    '##生日': (msg, user) => {
+    '##生日': async (msg, user) => {
         let date = new Date(Date.now())
         let key = `${date.getMonth() + 1}月${date.getDate()}日`
         let arr = arkData.getBirthdayOps(key)
@@ -30,7 +45,7 @@ const handlers = {
 ${arr.join(' ')}`
         }
     },
-    '##升级': (msg, user) => {
+    '##升级': async (msg, user) => {
         let arr = msg.split(' ')
         let m = Math.floor(Number(arr[1])),
             a = Math.floor(Number(arr[2])),
@@ -49,10 +64,10 @@ ${arr.join(' ')}`
 龙门币：${ y.gold - x.gold }
 经验：${ y.exp - x.exp }(相当于${ Math.ceil((y.exp - x.exp) / 1000) }个中级作战记录)`
     },
-    '##芜湖': (msg, user) => {
+    '##芜湖': async (msg, user) => {
         return '芜湖！'
     },
-    '##精英化': (msg, user) => {
+    '##精英化': async (msg, user) => {
         let arr = msg.split(' ')
         if (arr.length !== 2) {
             return `指令格式：
@@ -70,7 +85,7 @@ ${arr.join(' ')}`
         for (let i = 0; i < res.length; i++) res_str += `\n精英化${i + 1}：${res[i]}`
         return res_str
     },
-    '##技能': (msg, user) => {
+    '##技能': async (msg, user) => {
         let arr = msg.split(' ')
         if (arr.length !== 2) {
             return `指令格式：
@@ -88,7 +103,7 @@ ${arr.join(' ')}`
         for (let i = 0; i < res.length; i++) res_str += `\nLv${i + 1}->Lv${i + 2}：${res[i]}`
         return res_str
     },
-    '##专精': (msg, user) => {
+    '##专精': async (msg, user) => {
         let arr = msg.split(' ')
         if (arr.length !== 3 || isNaN(arr[2])) {
             return `指令格式：
@@ -106,10 +121,10 @@ ${arr.join(' ')}`
         for (let i = 0; i < res.length; i++) res_str += `\n专${i}->专${i + 1}：${res[i]}`
         return res_str
     },
-    '##刷取': (msg, user) => {
+    '##刷取': async (msg, user) => {
         return '材料一图流[CQ:image,file=https://cmdblockzqg.gitee.io/static/SL.png]'
     },
-    '##合成': (msg, user) => {
+    '##合成': async (msg, user) => {
         let arr = msg.split(' ')
         if (arr.length !== 2) {
             return `指令格式：
@@ -125,7 +140,7 @@ ${arr.join(' ')}`
         }
         return `材料${arr[1]}合成配方\n${res}`
     },
-    '##选择': (msg, user) => {
+    '##选择': async (msg, user) => {
         let arr = msg.split(' ')
         if (arr.length === 1) {
             return `指令格式：
@@ -134,21 +149,39 @@ ${arr.join(' ')}`
 `
         }
         return arr[Math.floor(Math.random() * (arr.length - 1)) + 1]
+    },
+    '##表情': async (msg, user) => {
+        let arr = msg.split(' ')
+        if (arr.length !== 3) return
+        let a = arr[1].codePointAt(0).toString(16)
+        let b = arr[2].codePointAt(0).toString(16)
+        let urls = [
+            `https://www.gstatic.com/android/keyboard/emojikitchen/20201001/u${a}/u${a}_u${b}.png`,
+            `https://www.gstatic.com/android/keyboard/emojikitchen/20201001/u${b}/u${b}_u${a}.png`,
+            `https://www.gstatic.com/android/keyboard/emojikitchen/20210831/u${a}/u${a}_u${b}.png`,
+            `https://www.gstatic.com/android/keyboard/emojikitchen/20210831/u${b}/u${b}_u${a}.png`
+        ]
+        for (let url of urls) {
+            if (await canReach(url)) {
+                return `[CQ:image,file=${url}]`
+            }
+        }
+        return ""
     }
 }
 
-module.exports = (msg, user, group, type) => {
+module.exports = async (msg, user, group, type) => {
     if (msg.indexOf('##') !== 0) return
     let res
     for (let i of Object.keys(handlers)) {
         if (msg.indexOf(i) === 0) {
-            res = handlers[i](msg, user)
+            res = await handlers[i](msg, user)
             break
         }
     }
     if (!res) return
     if (typeof(res) === 'string') {
-        sender.sendGroupMessage(group, res)
+        sender.sendGroupMessage(group, `[CQ:at,qq=${user}]\n${res}`)
     } else {
         sender.sendGroupForwardMessage(group, res)
     }

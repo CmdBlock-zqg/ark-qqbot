@@ -53,6 +53,7 @@ const getStatMsg = async (dur) => {
                 user_id: arr[i][0]
             }
         })).data
+        if (!data) continue
         res += '\n'
         if (data.title) res += `[${data.title}]`
         res += `${data.card || data.nickname} ${arr[i][1]}条`
@@ -69,7 +70,7 @@ module.exports = async (msg, user, group, type) => {
     await db.hIncrBy('msgStat_week', '0', 1)
     await db.hIncrBy('msgStat_month', String(user), 1)
     await db.hIncrBy('msgStat_month', '0', 1)
-    if (conf.msgStat.admin.indexOf(user) !== -1 && msg.indexOf('##统计' === 0)) {
+    if (msg.indexOf('##统计') === 0) {
         sender.sendGroupMessage(group, await getStatMsg(msg.split(' ')[1]))
     }
 }

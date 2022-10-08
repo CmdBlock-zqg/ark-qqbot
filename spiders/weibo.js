@@ -22,11 +22,11 @@ const httpGet = async (url, params) => {
 
 const formatText = (raw, urls) => {
     let text = raw
-    text = text.replace('&quot;', '"')
-    text = text.replace('&amp;', '&')
-    text = text.replace('&lt;', '<')
-    text = text.replace('&gt;', '>')
-    text = text.replace('&nbsp;', ' ')
+    text = text.replace(/&quot;/g, '"')
+    text = text.replace(/&amp;/g, '&')
+    text = text.replace(/&lt;/g, '<')
+    text = text.replace(/&gt;/g, '>')
+    text = text.replace(/&nbsp;/g, ' ')
     let pics = {}
     for (let url of urls) {
         if (url.pic_infos) {
@@ -63,6 +63,9 @@ const blogToMsg = async (blog) => {
         res = ret.text
         Object.assign(pics, ret.pics)
     }
+    if (blog.page_info && blog.page_info.page_pic) {
+        Object.assign(pics, { page_pic: { original: { url: blog.page_info.page_pic } } })
+    }
     return {
         text: res,
         pics: formatPics(pics)
@@ -71,7 +74,7 @@ const blogToMsg = async (blog) => {
 
 const formatVideo = (blog) => {
     if (blog.page_info && blog.page_info.media_info) {
-        let url = blog.page_info.media_info.stream_url
+        let url = blog.page_info.media_info.mp4_720p_mp4
         url = url.replace('&', '&amp;')
         url = url.replace('[', '&#91;')
         url = url.replace(']', '&#93;')
@@ -85,8 +88,6 @@ const formatVideo = (blog) => {
 const main = async () => {
     let users = conf.weibo.userIdList
     await db.setNX('last_weibo_id', '4684612855399759')
-    let lastId = Number(await db.get('last_weibo_id'))
-    let maxId = 0
     for (let user of users) {
         let blogs = await httpGet('https://weibo.com/ajax/statuses/mymblog', {
             uid: user,
@@ -94,8 +95,9 @@ const main = async () => {
             feature: 1
         })
         for (let blog of blogs.data.list) {
+            let lastId = Number(await db.get('last_weibo_id'))
             if (blog.id <= lastId || blog.retweeted_status) continue
-            if (blog.id > maxId) maxId = blog.id
+            await db.set('last_weibo_id', String(blog.id))
             let resText = await blogToMsg(blog)
             let resPics = resText.pics
             resText = resText.text
@@ -122,21 +124,18 @@ const main = async () => {
                 })
                 msgs.push(resVideo)
             }
-            for (let user of conf.weibo.broadcast.users) {
-                sender.sendPrivateMessage(user, msgs)
-            }
             for (let group of conf.weibo.broadcast.groups) {
                 await sender.sendGroupMessage(group, msgs)
                 await sender.sendGroupForwardMessage(group, forward)
             }
+            for (let user of conf.weibo.broadcast.users) {
+                sender.sendPrivateMessage(user, msgs)
+            }
         }
-    }
-    if (maxId > lastId) {
-        await db.set('last_weibo_id', String(maxId))
     }
 }
 
-module.exports = () => {
+module.exports = async () => {
     main()
     setInterval(main, conf.weibo.updateInterval)
 }
