@@ -33,7 +33,8 @@ const formatText = (raw, urls) => {
             text = text.replace(url.short_url, '')
             Object.assign(pics, url.pic_infos)
         } else {
-            text = text.replace(url.short_url, `${url.url_title}(${url.long_url})`)
+            // text = text.replace(url.short_url, `${url.url_title}(${url.long_url})`)
+            text = text.replace(url.short_url, ``)
         }
     }
     return {
@@ -73,6 +74,7 @@ const blogToMsg = async (blog) => {
 }
 
 const formatVideo = (blog) => {
+    /*
     if (blog.page_info && blog.page_info.media_info) {
         let url = blog.page_info.media_info.mp4_720p_mp4
         url = url.replace('&', '&amp;')
@@ -83,6 +85,8 @@ const formatVideo = (blog) => {
     } else {
         return ''
     }
+    */
+   return ''
 }
 
 const main = async () => {
