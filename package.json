@@ -1,24 +1,27 @@
 {
-  "name": "ark-qqbot",
+  "name": "fkbot-next",
   "version": "1.0.0",
-  "description": "明日方舟QQ群机器人",
+  "description": "",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/CmdBlock-zqg/ark-qqbot.git"
+    "url": "git+https://github.com/CmdBlock-zqg/fkbot.git"
   },
-  "author": "CmdBlock-zqg",
+  "keywords": [
+    "qqbot"
+  ],
+  "author": "CmdBlockZQG",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/CmdBlock-zqg/ark-qqbot/issues"
+    "url": "https://github.com/CmdBlock-zqg/fkbot/issues"
   },
-  "homepage": "https://github.com/CmdBlock-zqg/ark-qqbot#readme",
+  "homepage": "https://github.com/CmdBlock-zqg/fkbot#readme",
   "dependencies": {
-    "axios": "^0.21.4",
-    "node-schedule": "^2.0.0",
-    "redis": "^4.0.0-rc.1"
+    "axios": "^1.6.2",
+    "redis": "^4.6.11",
+    "ws": "^8.15.0"
   }
 }

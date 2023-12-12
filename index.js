@@ -1,22 +1,46 @@
-const http = require('http')
+const conf = require("./config");
+const conn = require("./connection");
 
-const conf = require('./conf')
-const route = require('./modules')
+const moduleProvider = {
+  play: require("./modules/play"),
+  log: require("./modules/log"),
+  cf: require("./modules/cf")
+};
 
-require('./spiders')()
-require('./arkData').init()
+const moduleHandler = {};
 
-const server = http.createServer()
-server.on('request', (req, resp) => {
-    let body = ''
-    req.on('data', (chunk) => { body += chunk })
-    req.on('end', () => {
-        body = JSON.parse(body)
-        if (body.post_type !== 'message') return
-        if (conf.ban.indexOf(body.sender.user_id) !== -1) return
-        route(body.message, body.sender.user_id, body.temp_source || body.group_id || body.sender.group_id, body.message_type)
-    })
-    resp.end()
-})
+for (const group in conf.modules) {
+  const groupModuleConf = conf.modules[group];
+  const modules = [];
+  for (const moduleId in groupModuleConf) {
+    const conf = groupModuleConf[moduleId];
+    modules.push(new moduleProvider[moduleId](Number(group), conf));
+  }
+  moduleHandler[group] = modules;
+}
 
-server.listen(conf.cqhttp.listen)
+function onGroupMsg(data) {
+  const msg = data.message;
+  let text = "";
+  for (const i of msg) {
+    if (i.type === "text") text += i.data.text;
+  }
+  if (!moduleHandler[data.group_id]) return;
+  for (const i of moduleHandler[data.group_id]) {
+    if (i.prefix === "*" || text.indexOf(i.prefix) === 0) {
+      if (i.fullMsg) {
+        i.msg(data);
+      } else if (i.richText) {
+        i.msg(msg, data.user_id);
+      } else {
+        i.msg(text, data.user_id);
+      }
+    }
+  }
+}
+
+conn.addHandler(1, (obj) => {
+  if (obj.post_type === "message" && obj.message_type === "group") {
+    onGroupMsg(obj);
+  }
+});
